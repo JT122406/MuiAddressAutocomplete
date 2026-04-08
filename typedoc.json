@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Address Autocomplete Component",
+  "entryPoints": ["./src/index.ts"],
+  "out": "doc",
+  "tsconfig": "tsconfig.json",
+  "sort": [
+    "source-order",
+    "alphabetical"
+  ]
+}
