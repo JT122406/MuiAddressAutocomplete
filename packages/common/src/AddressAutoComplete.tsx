@@ -1,54 +1,23 @@
-import React, {RefObject, SyntheticEvent, useEffect, useMemo, useRef, useState} from "react";
+import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 
 import type {
     AutocompleteInputChangeReason,
     AutocompleteProps,
     AutocompleteRenderInputParams
 } from '@mui/material/Autocomplete';
-import {AuthenticationResult, IPublicClientApplication, AccountInfo} from "@azure/msal-browser";
 import {Autocomplete, CircularProgress, TextField, TextFieldProps} from "@mui/material";
-import MapsSearch, {MapsSearchClient} from "@azure-rest/maps-search";
-import {TokenCredential} from "@azure/core-auth";
+import {AddressFetcher} from "./types";
 
-type AutocompleteOption = { label: string; value: any } | string;
-
-export interface AzureMapsAutocompleteFeature {
-    type: 'Feature';
-    properties: {
-        typeGroup: string;
-        type: string;
-        geometry: any | null;
-        address: {
-            locality?: string;
-            adminDistricts?: Array<{ name: string; shortName?: string }>;
-            countryRegions?: { ISO: string; name: string };
-            postalCode?: string;
-            streetNumber?: string;
-            streetName?: string;
-            addressLine?: string;
-            formattedAddress: string;
-        };
-    };
-    geometry: any | null;
-}
-
-export interface AzureMapsAutocompleteResponse {
-    type: 'FeatureCollection';
-    features: AzureMapsAutocompleteFeature[];
-}
+type AutocompleteOption<T> = { label: string; value: T } | string;
 
 /**
  * Props for the AddressAutoComplete component
  */
-export interface AddressAutoCompleteProps {
+export interface AddressAutoCompleteProps<T> {
     /** Callback function when an address is selected */
-    onSelect?: (feature: AzureMapsAutocompleteFeature | null) => void;
-    /** Azure Maps Client ID */
-    azureMapsClientId?: string;
-    /** MSAL Instance for Using Application */
-    msalInstance: IPublicClientApplication;
+    onSelect?: (feature: T | null) => void;
     /** Props applied to the underlying MUI Autocomplete component */
-    autocompleteProps?: Partial<AutocompleteProps<AutocompleteOption, false, false, true>>;
+    autocompleteProps?: Partial<AutocompleteProps<AutocompleteOption<T>, false, false, true>>;
     /** Props applied to the underlying MUI TextField component */
     textFieldProps?: Partial<TextFieldProps>;
     /** Default Bias Coordinates */
@@ -57,17 +26,25 @@ export interface AddressAutoCompleteProps {
     countryRegion?: string;
     /** Number of suggestions to display, Default is 5 */
     numberOfSuggestions?: number;
-    /** API Version */
-    apiVersion?: string;
+    /** A fetcher function to get address suggestions */
+    fetcher: AddressFetcher<T>;
 }
 
-export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance, autocompleteProps, textFieldProps, defaultBiasCoordinates, countryRegion = 'US', numberOfSuggestions = 5, apiVersion = "2026-06-01-preview" }: AddressAutoCompleteProps): React.JSX.Element {
+export function AddressAutoComplete<T>({
+    onSelect,
+    autocompleteProps,
+    textFieldProps,
+    defaultBiasCoordinates,
+    countryRegion = 'US',
+    numberOfSuggestions = 5,
+    fetcher
+}: AddressAutoCompleteProps<T>): React.JSX.Element {
     const [inputValue, setInputValue] = useState('');
-    const [options, setOptions] = useState<any[]>([]);
+    const [options, setOptions] = useState<AutocompleteOption<T>[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedOption, setSelectedOption] = useState<any | null>(null);
+    const [selectedOption, setSelectedOption] = useState<AutocompleteOption<T> | null>(null);
     const [userCoordinates, setUserCoordinates] = useState<[number, number] | undefined>(defaultBiasCoordinates);
-    const cache: RefObject<Record<string, any[]>> = useRef<Record<string, any[]>>({});
+    const cache: RefObject<Record<string, AutocompleteOption<T>[]>> = useRef<Record<string, AutocompleteOption<T>[]>>({});
 
     useEffect((): void => {
         if ('geolocation' in navigator) {
@@ -82,31 +59,6 @@ export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance,
         }
     }, []);
 
-    const tokenCredential: TokenCredential = useMemo<TokenCredential>(() => ({
-        getToken: async () => {
-            const accounts: AccountInfo[] = msalInstance.getAllAccounts();
-            if (accounts.length === 0) throw new Error('No active account');
-
-            const response: AuthenticationResult = await msalInstance.acquireTokenSilent({
-                scopes: ['https://atlas.microsoft.com/.default'],
-                account: accounts[0]
-            });
-
-            return {
-                token: response.accessToken,
-                expiresOnTimestamp: response.expiresOn?.getTime() ?? Date.now() + 3600 * 1000
-            };
-        }
-    }), [msalInstance]);
-
-    const client: MapsSearchClient | null = useMemo((): MapsSearchClient | null => {
-        if (!azureMapsClientId) return null;
-        return MapsSearch(tokenCredential, azureMapsClientId, {
-            apiVersion: apiVersion
-        });
-    }, [tokenCredential, azureMapsClientId, apiVersion]);
-
-
     useEffect((): void => {
         if (textFieldProps?.value !== undefined && typeof textFieldProps.value === 'string' && textFieldProps.value !== inputValue) {
             setInputValue(textFieldProps.value);
@@ -115,7 +67,7 @@ export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance,
 
 
     useEffect((): ((() => void) | undefined) => {
-        if (!inputValue || !client) {
+        if (!inputValue) {
             setOptions([]);
             return;
         }
@@ -138,29 +90,23 @@ export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance,
 
             setLoading(true);
             try {
-                const response: any = await client.path('/geocode:autocomplete' as any).get({
-                    queryParameters: {
-                        query: inputValue,
-                        ...(userCoordinates && { coordinates: userCoordinates }),
-                        countryRegion: countryRegion,
-                        resultTypeGroups: ['Address'],
-                        top: numberOfSuggestions
-                    },
-                    abortSignal: controller.signal
+                const results: T[] = await fetcher(inputValue, {
+                    signal: controller.signal,
+                    coordinates: userCoordinates,
+                    countryRegion: countryRegion,
+                    limit: numberOfSuggestions
                 });
 
-                const data = JSON.parse(response.body) as AzureMapsAutocompleteResponse;
-
-                const options = data.features.map((feature: AzureMapsAutocompleteFeature) => ({
-                    label: feature.properties.address.formattedAddress,
-                    value: feature
+                const options: AutocompleteOption<T>[] = results.map((result: any) => ({
+                    label: result.properties?.address?.formattedAddress || result.formattedAddress || JSON.stringify(result),
+                    value: result
                 }));
 
                 cache.current[inputValue] = options;
                 setOptions(options);
             } catch (err: any) {
                 if (err.name !== 'AbortError') {
-                    console.error('Azure Maps search error', err);
+                    console.error('Address search error', err);
                 }
             } finally {
                 setLoading(false);
@@ -173,11 +119,11 @@ export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance,
             controller.abort();
             clearTimeout(timeout);
         };
-    }, [inputValue, client, userCoordinates]);
+    }, [inputValue, fetcher, userCoordinates, countryRegion, numberOfSuggestions]);
 
     const handleSelect = (
         _: React.SyntheticEvent,
-        value: AutocompleteOption | null
+        value: AutocompleteOption<T> | null
     ): void => {
         let finalValue: string = '';
 
@@ -204,17 +150,17 @@ export function AddressAutoComplete({ onSelect, azureMapsClientId, msalInstance,
 
 
     return (
-        <Autocomplete<AutocompleteOption, false, false, true>
+        <Autocomplete<AutocompleteOption<T>, false, false, true>
             {...autocompleteProps}
-            getOptionLabel={(option: AutocompleteOption): string =>
+            getOptionLabel={(option: AutocompleteOption<T>): string =>
                 typeof option === 'string' ? option : option.label
             }
-            isOptionEqualToValue={(option: AutocompleteOption, value: AutocompleteOption): boolean =>
+            isOptionEqualToValue={(option: AutocompleteOption<T>, value: AutocompleteOption<T>): boolean =>
                 (typeof option !== 'string' && typeof value !== 'string')
-                    ? option.value.properties.address.formattedAddress === value.value.properties.address.formattedAddress
+                    ? option.label === value.label
                     : option === value
             }
-            filterOptions={(x: AutocompleteOption[]): AutocompleteOption[] => x}
+            filterOptions={(x: AutocompleteOption<T>[]): AutocompleteOption<T>[] => x}
             fullWidth
             freeSolo
             options={options}

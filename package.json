@@ -2,18 +2,23 @@
   "name": "@jt122406/address-autocomplete",
   "version": "0.0.1",
   "description": "Address Maps AutoComplete Component",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "private": true,
   "scripts": {
     "build": "tsc",
     "docs": "typedoc --options typedoc.json",
-    "lint": "eslint \"**/*.{ts,tsx}\"",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"**/*.{ts,tsx}\" --fix"
   },
   "author": "Joseph T. McQuigg",
   "packageManager": "pnpm@10.33.0",
   "devDependencies": {
+    "@azure-rest/maps-search": "2.0.0-beta.3",
+    "@azure/core-auth": "^1.10.1",
+    "@azure/msal-browser": "^5.6.3",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@eslint/js": "^10.0.1",
+    "@mui/material": "^6.4.7",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
@@ -25,14 +30,13 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typedoc": "^0.28.18",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
-  },
-  "files": [
-    "dist/"
-  ]
+  }
 }

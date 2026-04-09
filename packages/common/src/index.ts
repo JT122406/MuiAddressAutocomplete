@@ -14,4 +14,5 @@
  * ```
  * @author Joseph T. McQuigg
  */
-export { AddressAutoComplete, AddressAutoCompleteProps } from './AddressAutoComplete';
+export * from './AddressAutoComplete';
+export * from './types';

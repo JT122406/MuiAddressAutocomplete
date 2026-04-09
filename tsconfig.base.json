@@ -11,6 +11,9 @@
     "skipLibCheck": true,
     "composite": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@jt122406/address-autocomplete-common": ["./packages/common/src"]
+    }
   }
 }
