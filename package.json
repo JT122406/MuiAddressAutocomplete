@@ -1,10 +1,10 @@
 {
   "name": "@jt122406/address-autocomplete",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Address Maps AutoComplete Component",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "docs": "typedoc --options typedoc.json",
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"**/*.{ts,tsx}\" --fix"
