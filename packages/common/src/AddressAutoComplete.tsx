@@ -171,7 +171,6 @@ export function AddressAutoComplete<T>({
             onInputChange={(event: SyntheticEvent, value: string, reason: AutocompleteInputChangeReason): void => {
                 if (reason === 'input' || reason === 'clear') setInputValue(value);
 
-
                 autocompleteProps?.onInputChange?.(event, value, reason);
                 if (reason === 'input' && textFieldProps?.onChange)
                     textFieldProps.onChange({
@@ -186,12 +185,12 @@ export function AddressAutoComplete<T>({
                     slotProps={{
                         ...textFieldProps?.slotProps,
                         input: {
-                            ...params.InputProps,
+                            ...params.slotProps,
                             ...textFieldProps?.slotProps?.input,
                             endAdornment: (
                                 <>
                                     {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                    {params.InputProps.endAdornment}
+                                    {params.slotProps.input.endAdornment}
                                 </>
                             )
                         }

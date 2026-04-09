@@ -1,6 +1,6 @@
 {
   "name": "@jt122406/address-autocomplete-common",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -15,7 +15,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@mui/material": "^7.3.9",
-    "react": "^19.2.4"
+    "@mui/material": "^9.0.0",
+    "react": "^19.2.5"
   }
 }
