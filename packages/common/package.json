@@ -6,6 +6,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "dependencies": {},
   "peerDependencies": {
     "@mui/material": "^7.3.9",

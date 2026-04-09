@@ -40,19 +40,24 @@ export const makeClient = (msalInstance: IPublicClientApplication, azureMapsClie
  */
 export const createAzureFetcher: (client: MapsSearchClientType) => AddressFetcher<AzureMapsAutocompleteFeature> = (client: MapsSearchClientType): AddressFetcher<AzureMapsAutocompleteFeature> => {
     return async (query: string, options?: FetcherOptions): Promise<AzureMapsAutocompleteFeature[]> => {
-        const response: any = await client.path("/geocode:autocomplete" as any).get({
-            queryParameters: {
-                query,
-                ...(options?.coordinates && { coordinates: options.coordinates }),
-                countryRegion: options?.countryRegion || "US",
-                resultTypeGroups: ["Address"],
-                top: options?.limit || 5,
-            },
-            abortSignal: options?.signal,
-        });
+        try {
+            const response: any = await client.path("/geocode:autocomplete" as any).get({
+                queryParameters: {
+                    query,
+                    ...(options?.coordinates && { coordinates: options.coordinates }),
+                    countryRegion: options?.countryRegion || "US",
+                    resultTypeGroups: ["Address"],
+                    top: options?.limit || 5,
+                },
+                abortSignal: options?.signal,
+            });
 
-        const data = JSON.parse(response.body) as AzureMapsAutocompleteResponse;
+            const data = JSON.parse(response.body) as AzureMapsAutocompleteResponse;
 
-        return data.features;
+            return data.features;
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
     };
 };
