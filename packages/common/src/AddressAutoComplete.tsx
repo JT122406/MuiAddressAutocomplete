@@ -7,8 +7,7 @@ import type {
 } from '@mui/material/Autocomplete';
 import {Autocomplete, CircularProgress, TextField, TextFieldProps} from "@mui/material";
 import {AddressFetcher} from "./types";
-
-type AutocompleteOption<T> = { label: string; value: T } | string;
+import type {AutocompleteOption} from "./types";
 
 /**
  * Props for the AddressAutoComplete component
@@ -17,7 +16,7 @@ export interface AddressAutoCompleteProps<T> {
     /** Callback function when an address is selected */
     onSelect?: (feature: T | null) => void;
     /** Props applied to the underlying MUI Autocomplete component */
-    autocompleteProps?: Partial<AutocompleteProps<AutocompleteOption<T>, false, false, true>>;
+    autocompleteProps?: Partial<AutocompleteProps<AutocompleteOption, false, false, true>>;
     /** Props applied to the underlying MUI TextField component */
     textFieldProps?: Partial<TextFieldProps>;
     /** Default Bias Coordinates */
@@ -27,7 +26,7 @@ export interface AddressAutoCompleteProps<T> {
     /** Number of suggestions to display, Default is 5 */
     numberOfSuggestions?: number;
     /** A fetcher function to get address suggestions */
-    fetcher: AddressFetcher<T>;
+    fetcher: AddressFetcher;
 }
 
 export function AddressAutoComplete<T>({
@@ -40,11 +39,11 @@ export function AddressAutoComplete<T>({
     fetcher
 }: AddressAutoCompleteProps<T>): React.JSX.Element {
     const [inputValue, setInputValue] = useState('');
-    const [options, setOptions] = useState<AutocompleteOption<T>[]>([]);
+    const [options, setOptions] = useState<AutocompleteOption[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedOption, setSelectedOption] = useState<AutocompleteOption<T> | null>(null);
+    const [selectedOption, setSelectedOption] = useState<AutocompleteOption | null>(null);
     const [userCoordinates, setUserCoordinates] = useState<[number, number] | undefined>(defaultBiasCoordinates);
-    const cache: RefObject<Record<string, AutocompleteOption<T>[]>> = useRef<Record<string, AutocompleteOption<T>[]>>({});
+    const cache: RefObject<Record<string, AutocompleteOption[]>> = useRef<Record<string, AutocompleteOption[]>>({});
 
     useEffect((): void => {
         if ('geolocation' in navigator) {
@@ -90,20 +89,15 @@ export function AddressAutoComplete<T>({
 
             setLoading(true);
             try {
-                const results: T[] = await fetcher(inputValue, {
+                const results: AutocompleteOption[] = await fetcher(inputValue, {
                     signal: controller.signal,
                     coordinates: userCoordinates,
                     countryRegion: countryRegion,
                     limit: numberOfSuggestions
                 });
 
-                const options: AutocompleteOption<T>[] = results.map((result: any) => ({
-                    label: result.properties?.address?.formattedAddress || result.formattedAddress || JSON.stringify(result),
-                    value: result
-                }));
-
-                cache.current[inputValue] = options;
-                setOptions(options);
+                cache.current[inputValue] = results;
+                setOptions(results);
             } catch (err: any) {
                 if (err.name !== 'AbortError') {
                     console.error('Address search error', err);
@@ -121,10 +115,7 @@ export function AddressAutoComplete<T>({
         };
     }, [inputValue, fetcher, userCoordinates, countryRegion, numberOfSuggestions]);
 
-    const handleSelect = (
-        _: React.SyntheticEvent,
-        value: AutocompleteOption<T> | null
-    ): void => {
+    const handleSelect = (_: React.SyntheticEvent, value: AutocompleteOption | null): void => {
         let finalValue: string = '';
 
         if (typeof value === 'string') {
@@ -148,19 +139,18 @@ export function AddressAutoComplete<T>({
             } as React.ChangeEvent<HTMLInputElement>);
     };
 
-
     return (
-        <Autocomplete<AutocompleteOption<T>, false, false, true>
+        <Autocomplete<AutocompleteOption, false, false, true>
             {...autocompleteProps}
-            getOptionLabel={(option: AutocompleteOption<T>): string =>
+            getOptionLabel={(option: AutocompleteOption): string =>
                 typeof option === 'string' ? option : option.label
             }
-            isOptionEqualToValue={(option: AutocompleteOption<T>, value: AutocompleteOption<T>): boolean =>
+            isOptionEqualToValue={(option: AutocompleteOption, value: AutocompleteOption): boolean =>
                 (typeof option !== 'string' && typeof value !== 'string')
                     ? option.label === value.label
                     : option === value
             }
-            filterOptions={(x: AutocompleteOption<T>[]): AutocompleteOption<T>[] => x}
+            filterOptions={(x: AutocompleteOption[]): AutocompleteOption[] => x}
             fullWidth
             freeSolo
             options={options}
@@ -185,7 +175,7 @@ export function AddressAutoComplete<T>({
                     slotProps={{
                         ...textFieldProps?.slotProps,
                         input: {
-                            ...params.slotProps,
+                            ...params.slotProps.input,
                             ...textFieldProps?.slotProps?.input,
                             endAdornment: (
                                 <>

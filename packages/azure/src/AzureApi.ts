@@ -1,5 +1,5 @@
 import type { MapsSearchClient as MapsSearchClientType } from "@azure-rest/maps-search";
-import type { AddressFetcher, FetcherOptions } from "@jt122406/address-autocomplete-common";
+import type {AddressFetcher, AutocompleteOption, FetcherOptions} from "@jt122406/address-autocomplete-common";
 import type { AccessToken, TokenCredential } from "@azure/core-auth";
 import type {AccountInfo, AuthenticationResult, IPublicClientApplication} from "@azure/msal-browser";
 import type { AzureMapsAutocompleteFeature, AzureMapsAutocompleteResponse } from "./types";
@@ -23,7 +23,7 @@ const createMsalCredential: (msalInstance: IPublicClientApplication) => TokenCre
     },
 });
 
-export const makeClient = (msalInstance: IPublicClientApplication, azureMapsClientId: string, apiVersion: string = "2022-05-31"): AddressFetcher<AzureMapsAutocompleteFeature> => {
+export const makeClient = (msalInstance: IPublicClientApplication, azureMapsClientId: string, apiVersion: string = "2022-05-31"): AddressFetcher => {
     const credential: TokenCredential = createMsalCredential(msalInstance);
     const client: MapsSearchClientType = MapsSearch(credential, azureMapsClientId, {
         apiVersion: apiVersion
@@ -38,8 +38,8 @@ export const makeClient = (msalInstance: IPublicClientApplication, azureMapsClie
  * @param client - An instance of MapsSearchClient from @azure-rest/maps-search
  * @returns An AddressFetcher function
  */
-export const createAzureFetcher: (client: MapsSearchClientType) => AddressFetcher<AzureMapsAutocompleteFeature> = (client: MapsSearchClientType): AddressFetcher<AzureMapsAutocompleteFeature> => {
-    return async (query: string, options?: FetcherOptions): Promise<AzureMapsAutocompleteFeature[]> => {
+export const createAzureFetcher: (client: MapsSearchClientType) => AddressFetcher = (client: MapsSearchClientType): AddressFetcher => {
+    return async (query: string, options?: FetcherOptions): Promise<AutocompleteOption[]> => {
         try {
             const response: any = await client.path("/geocode:autocomplete" as any).get({
                 queryParameters: {
@@ -54,7 +54,10 @@ export const createAzureFetcher: (client: MapsSearchClientType) => AddressFetche
 
             const data = JSON.parse(response.body) as AzureMapsAutocompleteResponse;
 
-            return data.features;
+            return data.features.map((feature: AzureMapsAutocompleteFeature): AutocompleteOption => ({
+                label: feature.properties.address.formattedAddress,
+                value: feature
+            }));
         } catch (e) {
             console.error(e);
             return [];
