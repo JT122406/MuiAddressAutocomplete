@@ -1,6 +1,6 @@
 {
   "name": "@jt122406/address-autocomplete",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Address Maps AutoComplete Component",
   "private": true,
   "scripts": {
@@ -13,13 +13,13 @@
   "packageManager": "pnpm@10.33.0",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.58.0",
-    "@typescript-eslint/parser": "^8.58.0",
-    "eslint": "^10.1.0",
-    "globals": "^17.4.0",
-    "typedoc": "^0.28.18",
-    "typescript": "^6.0.2",
-    "typescript-eslint": "^8.58.0"
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "eslint": "^10.2.0",
+    "globals": "^17.5.0",
+    "typedoc": "^0.28.19",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.58.2"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"

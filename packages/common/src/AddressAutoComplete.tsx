@@ -1,7 +1,6 @@
 import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 
 import type {
-    AutocompleteInputChangeReason,
     AutocompleteProps,
     AutocompleteRenderInputParams
 } from '@mui/material/Autocomplete';
@@ -158,35 +157,53 @@ export function AddressAutoComplete<T>({
             value={selectedOption}
             inputValue={inputValue}
             onChange={handleSelect}
-            onInputChange={(event: SyntheticEvent, value: string, reason: AutocompleteInputChangeReason): void => {
-                if (reason === 'input' || reason === 'clear') setInputValue(value);
+            onInputChange={(_: SyntheticEvent, value: string, reason: string): void => {
+                if (reason === 'input' || reason === 'clear') {
+                    setInputValue(value);
 
-                autocompleteProps?.onInputChange?.(event, value, reason);
-                if (reason === 'input' && textFieldProps?.onChange)
-                    textFieldProps.onChange({
-                        target: { value, name: textFieldProps.name }
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    if (textFieldProps?.onChange) {
+                        textFieldProps.onChange({
+                            target: {value, name: textFieldProps.name}
+                        } as React.ChangeEvent<HTMLInputElement>);
+                    }
+                }
             }}
+            renderInput={(params: AutocompleteRenderInputParams): React.JSX.Element => {
+                const {
+                    value: _v,
+                    onChange: _oc,
+                    slotProps: textFieldSlotProps,
+                    ...otherTextFieldProps
+                } = textFieldProps || {};
 
-            renderInput={(params: AutocompleteRenderInputParams): React.JSX.Element => (
-                <TextField
-                    {...params}
-                    {...textFieldProps}
-                    slotProps={{
-                        ...textFieldProps?.slotProps,
-                        input: {
-                            ...params.slotProps.input,
-                            ...textFieldProps?.slotProps?.input,
-                            endAdornment: (
-                                <>
-                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                    {params.slotProps.input.endAdornment}
-                                </>
-                            )
-                        }
-                    }}
-                />
-            )}
+                const inputSlotProps: any =
+                    typeof textFieldSlotProps?.input === 'function'
+                        ? {}
+                        : textFieldSlotProps?.input;
+
+                return (
+                    <TextField
+                        {...params}
+                        {...otherTextFieldProps}
+                        slotProps={{
+                            ...textFieldSlotProps,
+                            input: {
+                                ...params.slotProps,
+                                ...inputSlotProps,
+                                endAdornment: (
+                                    <>
+                                        {loading ? (
+                                            <CircularProgress color="inherit" size={20} />
+                                        ) : null}
+                                        {params.slotProps.input.endAdornment}
+                                        {inputSlotProps?.endAdornment}
+                                    </>
+                                )
+                            }
+                        }}
+                    />
+                );
+            }}
         />
     );
 }
