@@ -186,9 +186,10 @@ export function AddressAutoComplete<T>({
                         {...params}
                         {...otherTextFieldProps}
                         slotProps={{
+                            ...params.slotProps,
                             ...textFieldSlotProps,
                             input: {
-                                ...params.slotProps,
+                                ...params.slotProps.input,
                                 ...inputSlotProps,
                                 endAdornment: (
                                     <>
@@ -199,6 +200,14 @@ export function AddressAutoComplete<T>({
                                         {inputSlotProps?.endAdornment}
                                     </>
                                 )
+                            },
+                            inputLabel: {
+                                ...params.slotProps.inputLabel,
+                                ...textFieldSlotProps?.inputLabel,
+                            },
+                            htmlInput: {
+                                ...params.slotProps.htmlInput,
+                                ...textFieldSlotProps?.htmlInput,
                             }
                         }}
                     />

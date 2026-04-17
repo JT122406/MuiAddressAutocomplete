@@ -52,7 +52,16 @@ export const createAzureFetcher: (client: MapsSearchClientType) => AddressFetche
                 abortSignal: options?.signal,
             });
 
-            const data = JSON.parse(response.body) as AzureMapsAutocompleteResponse;
+            if (response.status !== "200") {
+                console.error(`Azure Maps API error: ${response.status}`, response.body);
+                return [];
+            }
+
+            const data = (typeof response.body === 'string' ? JSON.parse(response.body) : response.body) as AzureMapsAutocompleteResponse;
+
+            if (!data?.features) {
+                return [];
+            }
 
             return data.features.map((feature: AzureMapsAutocompleteFeature): AutocompleteOption => ({
                 label: feature.properties.address.formattedAddress,
