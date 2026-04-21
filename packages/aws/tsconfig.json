@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "paths": {
+      "@jt122406/address-autocomplete-common": ["../common/src"]
+    }
+  },
+  "references": [
+    { "path": "../common" }
+  ],
+  "include": ["src"]
+}

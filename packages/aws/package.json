@@ -1,0 +1,23 @@
+{
+  "name": "@jt122406/address-autocomplete-aws",
+  "version": "0.0.6",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "dependencies": {
+    "@aws-sdk/client-geo-places": "^3.1033.0",
+    "@jt122406/address-autocomplete-common": "workspace:*"
+  },
+  "peerDependencies": {
+    "@aws-sdk/credential-providers": "^3.1033.0"
+  }
+}

@@ -23,7 +23,7 @@ const createMsalCredential: (msalInstance: IPublicClientApplication) => TokenCre
     },
 });
 
-export const makeClient = (msalInstance: IPublicClientApplication, azureMapsClientId: string, apiVersion: string = "2022-05-31"): AddressFetcher => {
+export const makeClient: (msalInstance: IPublicClientApplication, azureMapsClientId: string, apiVersion: string = "2022-05-31") => AddressFetcher = (msalInstance: IPublicClientApplication, azureMapsClientId: string, apiVersion: string = "2022-05-31"): AddressFetcher => {
     const credential: TokenCredential = createMsalCredential(msalInstance);
     const client: MapsSearchClientType = MapsSearch(credential, azureMapsClientId, {
         apiVersion: apiVersion
